@@ -56,12 +56,17 @@ jobs:
             - name: Checkout current repository
               uses: actions/checkout@v4
 
-            - name: Checkout upstream cryptography at tag
-              uses: actions/checkout@v4
-              with:
-                  repository: pyca/cryptography
-                  ref: ${{ needs.poll.outputs.LATEST_TAG }}
-                  path: upstream
+            - name: Clone upstream cryptography at tag
+              env:
+                  TAG: ${{ needs.poll.outputs.LATEST_TAG }}
+              run: |
+                  set -euo pipefail
+                  echo "Cloning pyca/cryptography at tag ${TAG}"
+                  git init upstream
+                  git -C upstream remote add origin https://github.com/pyca/cryptography.git
+                  git -C upstream fetch --depth=1 origin "refs/tags/${TAG}:refs/tags/${TAG}"
+                  git -C upstream checkout -q "tags/${TAG}"
+                  git -C upstream rev-parse --short HEAD
 
             - name: Setup Rust toolchain
               uses: dtolnay/rust-toolchain@stable
