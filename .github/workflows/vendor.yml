@@ -80,8 +80,13 @@ jobs:
                   echo "Detected upstream tag: ${TAG}"
                   VERSION="${TAG#v}"
 
-                  # Locate Cargo.toml in upstream sources
-                  CARGO_TOML=$(find upstream -name Cargo.toml -type f | head -n1)
+                  # Locate Cargo.toml in upstream sources (prefer workspace root)
+                  if [ -f upstream/Cargo.toml ]; then
+                    CARGO_TOML="upstream/Cargo.toml"
+                  else
+                    # Fallback: find a plausible Cargo.toml but skip docs examples
+                    CARGO_TOML=$(find upstream -name Cargo.toml -type f ! -path "*/docs/*" | sort | head -n1)
+                  fi
                   if [ -z "${CARGO_TOML}" ]; then
                     echo "Error: Could not find Cargo.toml in upstream repo" >&2
                     exit 1
